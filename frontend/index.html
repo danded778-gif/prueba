@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- PWA Meta tags -->
+    <meta name="theme-color" content="#E63946">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Domicilios">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Domicilios">
+    <link rel="apple-touch-icon" href="assets/img/icon-152x152.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icon-96x96.png">
+
+    <title>DOMIDELIS - Domicilios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+
+
+    <style>
+        /* ===== BANNER INSTALAR APP ===== */
+        .install-banner {
+            position: fixed;
+            bottom: -300px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 420px;
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 16px 16px 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
+            z-index: 99999;
+            transition: bottom 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .install-banner.mostrar {
+            bottom: 100px;
+        }
+
+        .install-banner-icon img {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .install-banner-text {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .install-banner-text strong {
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .install-banner-text span {
+            color: #888;
+            font-size: 0.78rem;
+            line-height: 1.3;
+        }
+
+        .install-banner-btn {
+            background: linear-gradient(135deg, #E63946, #F4A261);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 11px 22px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .install-banner-btn:hover {
+            transform: scale(1.06);
+            box-shadow: 0 4px 18px rgba(230, 57, 70, 0.5);
+        }
+
+        .install-banner-btn:active {
+            transform: scale(0.97);
+        }
+
+        .install-banner-close {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: #777;
+            cursor: pointer;
+            font-size: 0.95rem;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .install-banner-close:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        /* ===== BANNER CON INSTRUCCIONES MANUALES ===== */
+        .install-manual-banner {
+            position: fixed;
+            bottom: -300px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 420px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
+            z-index: 99999;
+            transition: bottom 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(244, 162, 97, 0.2);
+        }
+
+        .install-manual-banner.mostrar {
+            bottom: 100px;
+        }
+
+        .install-manual-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .install-manual-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+        }
+
+        .install-manual-header-text strong {
+            color: #fff;
+            font-size: 1rem;
+            display: block;
+        }
+
+        .install-manual-header-text span {
+            color: #F4A261;
+            font-size: 0.8rem;
+        }
+
+        .install-manual-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .install-manual-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 10px 14px;
+        }
+
+        .install-manual-step .step-num {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #E63946, #F4A261);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .install-manual-step .step-text {
+            color: #ccc;
+            font-size: 0.85rem;
+            line-height: 1.3;
+        }
+
+        .install-manual-step .step-text i {
+            color: #2A9D8F;
+            margin: 0 3px;
+        }
+
+        .install-manual-close {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: #777;
+            cursor: pointer;
+            font-size: 0.95rem;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .install-manual-close:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+
+            .install-banner,
+            .install-manual-banner {
+                width: calc(100% - 20px);
+            }
+
+            .install-banner.mostrar,
+            .install-manual-banner.mostrar {
+                bottom: 80px;
+            }
+
+            .install-banner-btn {
+                padding: 9px 16px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo"><i class="fas fa-utensils"></i> DOMI<span>DELIS</span></a>
+                <div class="mobile-menu" id="mobile-menu"
+                    onclick="document.getElementById('nav-links').classList.toggle('active');this.classList.toggle('active')">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <ul class="nav-links" id="nav-links">
+                    <li><a href="login.html"><i class="fas fa-user"></i> Iniciar sesión</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>🍔 Comida Rápida <br> al mejor precio</h1>
+                <p>Los mejores locales de domicilios en un solo lugar</p>
+                <div class="zone-selector">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <select id="zone-select">
+                        <option value="centro">📍 Parque principal - Envío $3,000</option>
+                        <option value="norte">📍 la judea - Envío $3,500</option>
+                        <option value="sur">📍 la chapa - Envío $4,000</option>
+                        <option value="oriente">📍 vargas - Envío $7,000</option>
+                        <option value="occidente">📍 sale marinilla - Envío $3,500</option>
+                        <option value="sanjose">📍 no definido - Envío $3,000</option>
+                        <option value="bosque">📍 no definido - Envío $4,000</option>
+                        <option value="prado">📍 no definido - Envío $3,500</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <div class="container">
+            <div id="stores-grid" class="stores-grid">
+                <div class="empty-state">
+                    <div class="spinner" style="margin: 0 auto 1rem;"></div>
+                    <p>Cargando tiendas...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== BANNER INSTALAR APP (Android con beforeinstallprompt) ===== -->
+    <div class="install-banner" id="install-banner" role="dialog" aria-label="Instalar aplicación">
+        <div class="install-banner-icon">
+            <img src="assets/img/icon-192x192.png" alt="Domicilios">
+        </div>
+        <div class="install-banner-text">
+            <strong>Instalar DOMIDELIS</strong>
+            <span>Acceso rápido desde tu pantalla de inicio</span>
+        </div>
+        <button class="install-banner-btn" id="btn-install-app" type="button">
+            <i class="fas fa-download"></i> Instalar
+        </button>
+        <button class="install-banner-close" id="btn-install-close" type="button" aria-label="Cerrar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- ===== BANNER INSTRUCCIONES MANUALES (Android sin evento o iOS) ===== -->
+    <div class="install-manual-banner" id="install-manual-banner">
+        <button class="install-manual-close" id="btn-manual-close" type="button" aria-label="Cerrar">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="install-manual-header">
+            <img src="assets/img/icon-192x192.png" alt="Domicilios">
+            <div class="install-manual-header-text">
+                <strong>Instalar DOMIDELIS</strong>
+                <span>Sigue estos pasos rápidos</span>
+            </div>
+        </div>
+        <div class="install-manual-steps" id="install-steps-container">
+            <!-- Se llena dinámicamente según el navegador -->
+        </div>
+    </div>
+
+    <!-- Carrito flotante -->
+    <div class="cart-float" id="cart-float">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="cart-counter">0</span>
+    </div>
+
+    <!-- Overlay del carrito -->
+    <div class="cart-overlay" id="cart-overlay"></div>
+
+    <!-- Panel del carrito -->
+    <div class="cart-panel" id="cart-panel">
+        <div class="cart-header">
+            <h3><i class="fas fa-shopping-cart"></i> Mi Pedido</h3>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+                <button onclick="vaciarCarrito()" id="btn-vaciar"
+                    style="display:none;background:rgba(255,255,255,0.15);border:none;color:white;padding:.3rem .8rem;border-radius:20px;font-size:.8rem;cursor:pointer;font-family:inherit;">
+                    <i class="fas fa-trash"></i> Vaciar
+                </button>
+                <button class="cart-close" id="close-cart"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <div class="cart-empty">🛒 Tu carrito está vacío</div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-price">$0</span>
+            </div>
+            <button class="btn-whatsapp-cart" id="checkout-whatsapp">
+                <i class="fab fa-whatsapp"></i> Continuar con el pedido
+            </button>
+        </div>
+    </div>
+
+    <!-- WhatsApp flotante 
+    <a href="https://wa.me/573005005306" class="whatsapp-float" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>-->
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>DOMIDELIS</h3>
+                    <p>Tu app de domicilios favorita. Rápido, fácil y seguro.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Enlaces</h3>
+                    <p><a href="login.html">Iniciar sesión</a></p>
+                </div>
+                <div class="footer-section">
+                    <h3>Síguenos</h3>
+                    <div class="social-links">
+                        <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.facebook.com/profile.php?id=61567224268766" target="_blank"><i
+                                class="fab fa-facebook"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 DOMIDELIS - Todos los derechos reservados</p>
+            </div>
+        </div>
+    </footer>
+
+    <button id="btn-volver-arriba" onclick="window.scrollTo({top:0,behavior:'smooth'})"
+        style="display:none;position:fixed;bottom:110px;left:40px;width:50px;height:50px;background:var(--dark);color:white;border:none;border-radius:50%;font-size:1.1rem;cursor:pointer;z-index:996;box-shadow:0 4px 15px rgba(0,0,0,0.2);transition:all .3s ease;">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/components/toast.js"></script>
+    <script src="assets/js/client.js"></script>
+
+    <!-- ===== SERVICE WORKER ===== -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(function (reg) {
+                        console.log('✅ SW registrado:', reg.scope);
+                    })
+                    .catch(function (err) {
+                        console.warn('⚠️ SW no registrado:', err.message);
+                    });
+            });
+        }
+    </script>
+
+    <!-- ===== LÓGICA INSTALAR APP (COMPLETA Y FUNCIONAL) ===== -->
+    <script>
+        (function () {
+            var deferredPrompt = null;
+            var yaSeMostró = false;
+
+            var bannerAuto = document.getElementById('install-banner');
+            var bannerManual = document.getElementById('install-manual-banner');
+            var btnInstall = document.getElementById('btn-install-app');
+            var btnCloseAuto = document.getElementById('btn-install-close');
+            var btnCloseManual = document.getElementById('btn-manual-close');
+            var stepsContainer = document.getElementById('install-steps-container');
+
+            var esStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            var esIOSPWA = window.navigator.standalone === true;
+
+            if (esStandalone || esIOSPWA) {
+                console.log('✅ App ya está instalada');
+                return;
+            }
+
+            if (cerradoRecientemente()) {
+                console.log('⏭️ Banner cerrado recientemente, no mostrar');
+                return;
+            }
+
+            var esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            var esAndroid = /Android/.test(navigator.userAgent);
+            var esChrome = /Chrome/.test(navigator.userAgent) && !/Edge|Edg|OPR/.test(navigator.userAgent);
+            var esSamsung = /SamsungBrowser/.test(navigator.userAgent);
+            var esFirefox = /Firefox/.test(navigator.userAgent);
+
+            if (esIOS) {
+                console.log('📱 iOS detectado → instrucciones manuales');
+                stepsContainer.innerHTML =
+                    '<div class="install-manual-step">' +
+                    '<div class="step-num">1</div>' +
+                    '<div class="step-text">Toca el botón <i class="fas fa-share-from-square"></i> <strong>Compartir</strong> aquí abajo</div>' +
+                    '</div>' +
+                    '<div class="install-manual-step">' +
+                    '<div class="step-num">2</div>' +
+                    '<div class="step-text">Desplázate y busca <strong>"Agregar a pantalla de inicio"</strong></div>' +
+                    '</div>' +
+                    '<div class="install-manual-step">' +
+                    '<div class="step-num">3</div>' +
+                    '<div class="step-text">Toca <strong>"Agregar"</strong> y listo</div>' +
+                    '</div>';
+                setTimeout(function () {
+                    bannerManual.classList.add('mostrar');
+                }, 3000);
+                configurarCierreManual();
+                return;
+            }
+
+            window.addEventListener('beforeinstallprompt', function (e) {
+                e.preventDefault();
+                deferredPrompt = e;
+                console.log('✅ beforeinstallprompt capturado');
+
+                if (!yaSeMostró) {
+                    yaSeMostró = true;
+                    setTimeout(function () {
+                        mostrarBannerAuto();
+                    }, 2500);
+                }
+            });
+
+            setTimeout(function () {
+                if (!deferredPrompt && !yaSeMostró) {
+                    console.log('⚠️ No llegó beforeinstallprompt → instrucciones manuales');
+                    yaSeMostró = true;
+
+                    if (esSamsung) {
+                        stepsContainer.innerHTML =
+                            '<div class="install-manual-step">' +
+                            '<div class="step-num">1</div>' +
+                            '<div class="step-text">Toca el menú <i class="fas fa-bars"></i> (3 líneas) abajo a la derecha</div>' +
+                            '</div>' +
+                            '<div class="install-manual-step">' +
+                            '<div class="step-num">2</div>' +
+                            '<div class="step-text">Busca <strong>"Agregar página a pantalla de inicio"</strong></div>' +
+                            '</div>' +
+                            '<div class="install-manual-step">' +
+                            '<div class="step-num">3</div>' +
+                            '<div class="step-text">Toca <strong>"Agregar"</strong></div>' +
+                            '</div>';
+                    } else if (esFirefox) {
+                        stepsContainer.innerHTML =
+                            '<div class="install-manual-step">' +
+                            '<div class="step-num">1</div>' +
+                            '<div class="step-text">Toca el menú <i class="fas fa-ellipsis-v"></i> (tres puntos) del navegador</div>' +
+                            '</div>' +
+                            '<div class="install-manual-step">' +
+                            '<div class="step-num">2</div>' +
+                            '<div class="step-text">Busca <strong>"Instalar"</strong> o <strong>"Agregar a pantalla de inicio"</strong></div>' +
+                            '</div>' +
+                            '<div class="install-manual-step">' +
+                            '<div class="step-num">3</div>' +
+                            '<div class="step-text">Confirma tocando <strong>"Instalar"</strong></div>' +
+                            '</div>';
+                    } else {
+                        stepsContainer.innerHTML =
+                            '<div class="install-manual-step">' +
+                            '<div class="step-num">1</div>' +
+                            '<div class="step-text">Toca el menú <i class="fas fa-ellipsis-v"></i> (tres puntos) arriba a la derecha</div>' +
+                            '</div>' +
+                            '<div class="install-manual-step">' +
+                            '<div class="step-num">2</div>' +
+                            '<div class="step-text">Busca y toca <strong>"Instalar aplicación"</strong> o <strong>"Agregar a pantalla de inicio"</strong></div>' +
+                            '</div>' +
+                            '<div class="install-manual-step">' +
+                            '<div class="step-num">3</div>' +
+                            '<div class="step-text">Confirma tocando <strong>"Instalar"</strong></div>' +
+                            '</div>';
+                    }
+
+                    bannerManual.classList.add('mostrar');
+                    configurarCierreManual();
+                }
+            }, 6000);
+
+            btnInstall.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!deferredPrompt) {
+                    console.warn('No hay deferredPrompt, mostrando manual');
+                    ocultarBannerAuto();
+                    bannerManual.classList.add('mostrar');
+                    configurarCierreManual();
+                    return;
+                }
+
+                deferredPrompt.prompt();
+
+                deferredPrompt.userChoice.then(function (choiceResult) {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('🎉 Usuario aceptó instalar');
+                        ocultarBannerAuto();
+                    } else {
+                        console.log('❌ Usuario rechazó instalar');
+                    }
+                    deferredPrompt = null;
+                }).catch(function (err) {
+                    console.error('Error en userChoice:', err);
+                    deferredPrompt = null;
+                });
+            });
+
+            btnCloseAuto.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                ocultarBannerAuto();
+                guardarCierre();
+            });
+
+            window.addEventListener('appinstalled', function () {
+                console.log('🎉 appinstalled disparado');
+                ocultarBannerAuto();
+                ocultarBannerManual();
+                deferredPrompt = null;
+            });
+
+            function mostrarBannerAuto() {
+                var cartPanel = document.getElementById('cart-panel');
+                if (cartPanel && cartPanel.classList.contains('active')) {
+                    setTimeout(mostrarBannerAuto, 2000);
+                    return;
+                }
+                bannerAuto.classList.add('mostrar');
+            }
+
+            function ocultarBannerAuto() {
+                bannerAuto.classList.remove('mostrar');
+            }
+
+            function ocultarBannerManual() {
+                bannerManual.classList.remove('mostrar');
+            }
+
+            function configurarCierreManual() {
+                btnCloseManual.replaceWith(btnCloseManual.cloneNode(true));
+                var nuevoBtn = document.getElementById('btn-manual-close');
+                nuevoBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    ocultarBannerManual();
+                    guardarCierre();
+                });
+            }
+
+            function guardarCierre() {
+                try {
+                    localStorage.setItem('install_banner_cerrado', Date.now().toString());
+                } catch (e) { }
+            }
+
+            function cerradoRecientemente() {
+                try {
+                    var timestamp = localStorage.getItem('install_banner_cerrado');
+                    if (!timestamp) return false;
+                    var sieteDias = 7 * 24 * 60 * 60 * 1000;
+                    return (Date.now() - parseInt(timestamp, 10)) < sieteDias;
+                } catch (e) {
+                    return false;
+                }
+            }
+
+        })();
+    </script>
+
+    <!-- Auto-redirigir si ya hay sesión guardada -->
+    <script>
+        (function () {
+            var rol = localStorage.getItem('rol');
+            if (rol === 'admin') {
+                window.location.replace('admin.html');
+            } else if (rol === 'domiciliario') {
+                window.location.replace('domiciliario.html');
+            }
+        })();
+    </script>
+
+    <script>
+        // Cargar zona guardada al iniciar
+        var zonaGuardada = localStorage.getItem('zonaSeleccionada');
+        if (zonaGuardada) {
+            APP_CONFIG.zonaActual = zonaGuardada;
+            var select = document.getElementById('zone-select');
+            if (select) select.value = zonaGuardada;
+        }
+
+        // Guardar zona cuando cambie
+        document.getElementById('zone-select').addEventListener('change', function (e) {
+            APP_CONFIG.zonaActual = e.target.value;
+            localStorage.setItem('zonaSeleccionada', e.target.value);
+            actualizarCarritoUI();
+        });
+
+        // Cargar carrito al iniciar
+        carrito = obtenerCarrito();
+        actualizarCarritoUI();
+    </script>
+
+    <!-- ===== JUEGO OFFLINE (módulo separado) ===== -->
+    <link rel="stylesheet" href="assets/css/offline-game.css">
+    <script src="assets/js/offline-game.js"></script>
+    <script>
+        OfflineGame.init();
+    </script>
+
+
+    <script>
+        const btnArriba = document.getElementById('btn-volver-arriba');
+        window.addEventListener('scroll', () => {
+            btnArriba.style.display = window.scrollY > 600 ? 'flex' : 'none';
+            btnArriba.style.alignItems = 'center';
+            btnArriba.style.justifyContent = 'center';
+        });
+    </script>
+
+</body>
+
+</html>

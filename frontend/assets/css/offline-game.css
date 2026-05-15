@@ -1,0 +1,206 @@
+/* ============================================
+   OFFLINE GAME - MOTO RUNNER
+   Estilos independientes del juego
+   ============================================ */
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
+#offline-game {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #1a1a2e;
+    z-index: 9999;
+    font-family: 'Poppins', sans-serif;
+}
+
+#offline-game.active {
+    display: block;
+}
+
+/* ===== CANVAS ===== */
+#offline-game canvas {
+    display: block;
+    margin: 0 auto;
+    image-rendering: pixelated;
+}
+
+/* ===== HUD SUPERIOR ===== */
+.offline-game__hud {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: #fff;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.offline-game__hud-title {
+    font-size: 2rem;
+    font-weight: 800;
+    text-shadow: 0 0 10px #e63946;
+}
+
+.offline-game__hud-subtitle {
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-top: 5px;
+}
+
+.offline-game__hud-score {
+    margin-top: 10px;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.offline-game__hud-record {
+    margin-top: 5px;
+    font-size: 0.8rem;
+    color: #e63946;
+}
+
+/* ===== PANTALLA DE INICIO ===== */
+.offline-game__start {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #fff;
+    z-index: 3;
+}
+
+.offline-game__start-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.offline-game__start-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #e63946;
+    text-shadow: 0 0 20px #e63946;
+}
+
+.offline-game__start-desc {
+    font-size: 1rem;
+    color: #aaa;
+    margin: 0.8rem 0 2rem;
+}
+
+.offline-game__start-hint {
+    margin-top: 2rem;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* ===== PANTALLA GAME OVER ===== */
+.offline-game__gameover {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #fff;
+    z-index: 3;
+}
+
+.offline-game__gameover.active {
+    display: block;
+}
+
+.offline-game__gameover-title {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #e63946;
+    text-shadow: 0 0 20px #e63946;
+}
+
+.offline-game__gameover-score {
+    font-size: 1.2rem;
+    margin: 1rem 0;
+}
+
+.offline-game__gameover-waiting {
+    margin-top: 15px;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+/* ===== BOTONES ===== */
+.offline-game__btn {
+    border: none;
+    color: #fff;
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.offline-game__btn:hover {
+    transform: scale(1.08);
+}
+
+.offline-game__btn:active {
+    transform: scale(0.97);
+}
+
+.offline-game__btn--play {
+    background: linear-gradient(135deg, #E63946, #F4A261);
+    padding: 18px 50px;
+    font-size: 1.2rem;
+    box-shadow: 0 8px 30px rgba(230, 57, 70, 0.5);
+}
+
+.offline-game__btn--restart {
+    background: #e63946;
+    box-shadow: 0 5px 20px rgba(230, 57, 70, 0.4);
+}
+
+.offline-game__btn--close {
+    display: none;
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2ecc71;
+    padding: 12px 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    animation: offline-game__pulse 2s infinite;
+}
+
+.offline-game__btn--close.active {
+    display: block;
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes offline-game__pulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.05); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 480px) {
+    .offline-game__hud-title {
+        font-size: 1.5rem;
+    }
+    .offline-game__start-title {
+        font-size: 2rem;
+    }
+    .offline-game__gameover-title {
+        font-size: 2.2rem;
+    }
+    .offline-game__btn--play {
+        padding: 15px 40px;
+        font-size: 1.1rem;
+    }
+}

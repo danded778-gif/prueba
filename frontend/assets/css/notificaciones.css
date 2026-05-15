@@ -1,0 +1,165 @@
+/* ============================================
+   NOTIFICACIONES TOAST ESTANDARIZADAS
+   DOMIDELIS - Sistema de Domicilios
+   ============================================ */
+
+/* ---------- Base ---------- */
+.notificacion {
+    position: fixed;
+    top: 100px;
+    right: -400px;
+    background: #ffffff;
+    color: #333333;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid var(--success);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    transition: right 0.3s ease;
+    font-weight: 500;
+    min-width: 280px;
+}
+
+.notificacion.mostrar {
+    right: 20px;
+}
+
+/* Icono circular */
+.notificacion .notif-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+/* Contenido */
+.notificacion .notif-content {
+    flex: 1;
+}
+
+.notificacion .notif-content h4 {
+    margin: 0 0 0.2rem 0;
+    color: #333333;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.notificacion .notif-content p {
+    margin: 0;
+    color: #666666;
+    font-size: 0.9rem;
+}
+
+/* Cerrar */
+.notificacion .notif-close {
+    background: none;
+    border: none;
+    color: #999999;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.notificacion .notif-close:hover {
+    background: #f5f5f5;
+    color: #333333;
+}
+
+/* ---------- Variantes de color ---------- */
+.notificacion-exito, .notificacion-success { border-left-color: var(--success); }
+.notificacion-exito .notif-icon, .notificacion-success .notif-icon { background: #e8f5e9; color: var(--success); }
+
+.notificacion-error { border-left-color: var(--danger); }
+.notificacion-error .notif-icon { background: #ffebee; color: var(--danger); }
+
+.notificacion-info, .notificacion-nuevo-domi { border-left-color: var(--accent); }
+.notificacion-info .notif-icon, .notificacion-nuevo-domi .notif-icon { background: #e0f7fa; color: var(--accent); }
+
+.notificacion-urgente, .notificacion-pedido-urgente { border-left-color: var(--primary); }
+.notificacion-urgente .notif-icon, .notificacion-pedido-urgente .notif-icon { background: #ffebee; color: var(--primary); }
+
+/* ============================================
+   NOTIFICACIONES EN TIEMPO REAL (ADMIN)
+   ============================================ */
+.notificacion-flotante {
+    position: fixed;
+    top: 100px;
+    right: -400px;
+    background: #ffffff;
+    color: #333333;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    z-index: 3000;
+    max-width: 380px;
+    border-left: 4px solid var(--success);
+    transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.notificacion-flotante.mostrar { right: 20px; }
+
+.notificacion-flotante .notif-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 1.1rem;
+}
+
+.notificacion-flotante .notif-content { flex: 1; }
+.notificacion-flotante .notif-content h4 { margin: 0 0 0.3rem 0; color: #333333; font-size: 1.05rem; font-weight: 600; }
+.notificacion-flotante .notif-content p { margin: 0; color: #666666; font-size: 0.9rem; }
+.notificacion-flotante .notif-content small { color: #888888; font-size: 0.8rem; }
+.notificacion-flotante .notif-acciones { display: flex; flex-direction: column; gap: 0.5rem; }
+
+/* Variantes */
+.notificacion-flotante.notificacion-nuevo-domi { border-left-color: var(--accent); }
+.notificacion-flotante.notificacion-nuevo-domi .notif-icon { background: #e0f7fa; color: var(--accent); }
+
+.notificacion-flotante.notificacion-pedido-urgente { border-left-color: var(--primary); }
+.notificacion-flotante.notificacion-pedido-urgente .notif-icon { background: #ffebee; color: var(--primary); }
+
+.notificacion-flotante.notificacion-exito { border-left-color: var(--success); }
+.notificacion-flotante.notificacion-exito .notif-icon { background: #e8f5e9; color: var(--success); }
+
+/* Botón asignar */
+.btn-asignar-ahora {
+    background: var(--primary); color: white; border: none;
+    padding: 0.6rem 1rem; border-radius: 25px;
+    font-weight: 600; font-size: 0.9rem; cursor: pointer;
+    display: flex; align-items: center; gap: 0.3rem;
+    transition: all 0.3s ease; white-space: nowrap;
+}
+.btn-asignar-ahora:hover { background: #c62828; transform: scale(1.05); box-shadow: 0 5px 15px rgba(230, 57, 70, 0.4); }
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .notificacion, .notificacion-flotante {
+        left: 10px; right: 10px; max-width: none;
+        top: auto; bottom: -200px;
+        border-left: none; border-top: 4px solid var(--success);
+    }
+    .notificacion.mostrar, .notificacion-flotante.mostrar {
+        right: 10px; left: 10px; bottom: 20px; top: auto;
+    }
+    .notificacion-error, .notificacion-flotante.notificacion-pedido-urgente { border-top-color: var(--danger); }
+    .notificacion-nuevo-domi, .notificacion-flotante.notificacion-nuevo-domi { border-top-color: var(--accent); }
+    .notif-acciones { flex-direction: row; width: 100%; margin-top: 0.5rem; }
+    .btn-asignar-ahora { flex: 1; justify-content: center; }
+}

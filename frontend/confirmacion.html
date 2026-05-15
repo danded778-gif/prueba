@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- ★ PWA -->
+    <meta name="theme-color" content="#E63946">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Domicilios">
+    <link rel="apple-touch-icon" href="assets/img/icon-152x152.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icon-96x96.png">
+    <title>Pedido Confirmado - DOMICILIOS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #E63946;
+            --secondary: #F4A261;
+            --accent: #2A9D8F;
+            --dark: #5D4037;
+            --light: #FFF8E7;
+            --white: #FFFFFF;
+            --success: #28a745;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--dark) 0%, var(--secondary) 100%);
+            padding: 20px;
+        }
+
+        .confirmacion-box {
+            background: var(--white);
+            border-radius: 20px;
+            /* Reducido el padding general para que no sea tan gigante */
+            padding: 35px 25px; 
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .icono-exito {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, var(--success), #20c997);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem; /* Reducido el margen inferior */
+            animation: scaleIn 0.5s ease 0.2s both;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        .icono-exito i {
+            font-size: 2.5rem; /* Reducido ligeramente */
+            color: white;
+        }
+
+        h1 {
+            color: var(--dark);
+            margin-bottom: 0.8rem; /* Reducido */
+            font-size: 1.6rem; /* Reducido ligeramente */
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 1.5rem; /* Reducido */
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .info-box {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 1.2rem; /* Reducido */
+            margin-bottom: 1.5rem; /* Reducido */
+            text-align: left;
+        }
+
+        .info-box p {
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem; /* Un poco más pequeño para que quepa bien */
+        }
+
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-box strong {
+            color: var(--dark);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.9rem 1.8rem; /* Reducido */
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(230,57,70,0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(230,57,70,0.5);
+        }
+
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+            margin-top: 1rem;
+        }
+
+        .btn-whatsapp:hover {
+            background: #128C7E;
+            transform: translateY(-3px);
+        }
+
+        .logo {
+            font-size: 1.3rem; /* Reducido */
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 1.5rem; /* Reducido */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        
+        .logo span { color: var(--primary); }
+
+        /* ======================================================= */
+        /* AQUÍ ESTÁ LA MAGIA RESPONSIVE PARA MÓVILES              */
+        /* ======================================================= */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px; /* Menos espacio en los bordes de la pantalla */
+                align-items: flex-start; /* Mejor que empiece desde arriba en pantallas muy altas y pequeñas */
+                padding-top: 40px;
+            }
+
+            .confirmacion-box {
+                padding: 30px 20px; /* Aún más compacto en móviles */
+                border-radius: 15px;
+            }
+
+            .icono-exito {
+                width: 80px;
+                height: 80px;
+                margin-bottom: 1.2rem;
+            }
+
+            .icono-exito i {
+                font-size: 2.2rem;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+            }
+
+            p {
+                font-size: 0.9rem;
+            }
+
+            .btn {
+                width: 100%; /* Los botones ocupan todo el ancho en móvil, más fácil de tocar */
+                padding: 0.9rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="confirmacion-box">
+        <a href="index.html" class="logo"><i class="fas fa-utensils"></i> DOMI<span>DELIS</span></a>
+        
+        <div class="icono-exito">
+            <i class="fas fa-check"></i>
+        </div>
+        
+        <h1>¡Pedido Enviado!</h1>
+        <p>Tu pedido ha sido recibido y pronto nos pondremos en contacto contigo para confirmarlo.</p>
+        
+        <div class="info-box">
+            <p><strong><i class="fas fa-clock"></i> Tiempo estimado:</strong> 30-45 minutos</p>
+            <p><strong><i class="fas fa-phone"></i> Contacto:</strong> Te llamaremos al número proporcionado</p>
+            <p><strong><i class="fas fa-info-circle"></i> Importante:</strong> Guarda tu comprobante de pago</p>
+        </div>
+        
+        <a href="index.html" class="btn btn-primary">
+            <i class="fas fa-utensils"></i> Hacer otro pedido
+        </a>
+        
+        <a href="https://wa.me/573005005306" class="btn btn-whatsapp" target="_blank" style="display: inline-flex;">
+            <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
+        </a>
+    </div>
+
+</body>
+</html>
