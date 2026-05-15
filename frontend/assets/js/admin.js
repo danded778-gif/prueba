@@ -178,7 +178,7 @@ async function activarPermisos() {
     if (banner) banner.style.display = 'none';
 
     if (permiso && typeof pushManager !== 'undefined') {
-        const vapidRes = await fetch(`${API_URL}/api/vapid-public-key`);
+        const vapidRes = await fetch(`${API_URL}/vapid-public-key`);
         const { publicKey } = await vapidRes.json();
         await pushManager.init(publicKey);
     }
