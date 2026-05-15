@@ -14,7 +14,7 @@ class PushNotificationManager {
                       window.location.hostname.includes('.ngrok.io');
         this.apiUrl = esLocal
             ? window.location.origin
-            : 'https://domidelis-domicilios.up.railway.app';
+            : 'https://prueba-production-b9fb.up.railway.app';
     }
 
     async init(vapidPublicKey) {
