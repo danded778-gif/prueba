@@ -13,11 +13,11 @@ const esLocal = window.location.hostname === 'localhost' ||
 // En producción: frontend en GitHub Pages, API en Railway
 const API_URL = esLocal
     ? window.location.origin + '/api'
-    : 'https://domidelis-domicilios.up.railway.app/api';
+    : 'https://prueba-production-b9fb.up.railway.app/api';
 
 const SOCKET_URL = esLocal
     ? window.location.origin
-    : 'https://domidelis-domicilios.up.railway.app';
+    : 'https://prueba-production-b9fb.up.railway.app';
 console.log(`⚙️ Entorno: ${esLocal ? 'LOCAL/NGROK' : 'PRODUCCIÓN'}`);
 console.log(`⚙️ API:  ${API_URL}`);
 console.log(`⚙️ Socket: ${SOCKET_URL}`);
