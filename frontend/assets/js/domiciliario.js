@@ -100,12 +100,8 @@ function reproducirSonidoFallback() {
 // ============================================
 async function cargarPedidosDomiciliario(domiciliarioId) {
     try {
-        const res = await fetchConToken(`${API_URL}?action=getPedidos&domiciliario=${domiciliarioId}`);
-        const data = await res.json();
-        
-        // ✅ FIX: Soportar ambos formatos (Array directo o Objeto con propiedad "pedidos")
-        const pedidos = Array.isArray(data) ? data : (data.pedidos || []);
-
+        const res = await fetch(`${API_URL}?action=getPedidos&domiciliario=${domiciliarioId}`);
+        const pedidos = await res.json();
         pedidosActivosCache = pedidos.filter(p => p.estado !== 'entregado' && p.estado !== 'cancelado');
         pedidos.filter(p => p.estado === 'entregado').forEach(p => agregarAHistorialLocal(p));
         guardarHistorialLocal();
@@ -113,9 +109,8 @@ async function cargarPedidosDomiciliario(domiciliarioId) {
         renderizarHistorial();
         actualizarBadges();
     } catch (error) {
-        console.error('❌ Error cargando pedidos:', error); // Ayuda a depurar en consola
         const c = document.getElementById('pedidos-activos');
-        if (c) c.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error cargando</h3><p>${error.message}</p><button onclick="cargarDomiciliarioData()" class="btn btn-secondary"><i class="fas fa-sync-alt"></i> Reintentar</button></div>`;
+        if (c) c.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error cargando</h3><button onclick="cargarDomiciliarioData()" class="btn btn-secondary"><i class="fas fa-sync-alt"></i> Reintentar</button></div>`;
     }
 }
 
