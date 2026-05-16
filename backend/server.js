@@ -40,7 +40,7 @@ app.use(express.urlencoded({ extended: true }));
    // console.error('Faltan claves VAPID en el archivo .env');
  //   process.exit(1);}
 
-webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+//webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
 // ============================================
 // SUSCRIPCIONES PUSH
