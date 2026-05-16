@@ -20,6 +20,32 @@ function obtenerTiendasTextoDomi(pedido) {
     return tiendas.size > 0 ? Array.from(tiendas).join(', ') : '';
 }
 
+// ─── NUEVA FUNCIÓN: FETCH SEGURO CON JWT ───
+async function fetchConToken(url, opciones = {}) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        cerrarSesion(); // Si no hay token, lo sacamos
+        throw new Error('Sesión expirada');
+    }
+    
+    opciones.headers = opciones.headers || {};
+    if (opciones.headers instanceof Headers) {
+        opciones.headers.append('Authorization', `Bearer ${token}`);
+    } else {
+        opciones.headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, opciones);
+
+    // Si el servidor rechaza el token (401 No autorizado o 403 Prohibido)
+    if (response.status === 401 || response.status === 403) {
+        alert('Tu sesión ha expirado o no tienes permisos. Por favor, inicia sesión nuevamente.');
+        cerrarSesion();
+        throw new Error('No autorizado');
+    }
+
+    return response;
+}
 // ============================================
 // CARGA INICIAL
 // ============================================
@@ -100,7 +126,7 @@ function reproducirSonidoFallback() {
 // ============================================
 async function cargarPedidosDomiciliario(domiciliarioId) {
     try {
-        const res = await fetch(`${API_URL}?action=getPedidos&domiciliario=${domiciliarioId}`);
+        const res = await fetchConToken(`${API_URL}?action=getPedidos&domiciliario=${domiciliarioId}`);
         const pedidos = await res.json();
         pedidosActivosCache = pedidos.filter(p => p.estado !== 'entregado' && p.estado !== 'cancelado');
         pedidos.filter(p => p.estado === 'entregado').forEach(p => agregarAHistorialLocal(p));
