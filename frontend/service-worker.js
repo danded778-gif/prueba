@@ -3,7 +3,7 @@
 // Estrategia: Cache First + Network Fallback
 // ============================================
 
-const CACHE_NAME = 'soluvencon-v1.3';
+const CACHE_NAME = 'soluvencon-v1.4';
 
 // Archivos que se cachean al instalar
 const ARCHIVOS_ESTATICOS = [
