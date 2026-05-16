@@ -32,14 +32,13 @@ app.use(express.urlencoded({ extended: true }));
 // VAPID — Claves para Web Push
 // Estas NO cambian entre local y producción
 // ============================================
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
-const VAPID_EMAIL = process.env.VAPID_EMAIL;
+//const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+//const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+//const VAPID_EMAIL = process.env.VAPID_EMAIL;
 
-if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-    console.error('Faltan claves VAPID en el archivo .env');
-    process.exit(1);
-}
+//if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+   // console.error('Faltan claves VAPID en el archivo .env');
+ //   process.exit(1);}
 
 webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
@@ -52,7 +51,7 @@ const suscripciones = new Map();
 // ============================================
 // GOOGLE APPS SCRIPT — URL fija
 // ============================================
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwIiA3LB_C1mITpOFMH7IhGglOr7I0oQF20i24BrSmCdOLYttbmDXbnwnl4kEXr6F3f2Q/exec';
+//const GAS_URL = 'https://script.google.com/macros/s/AKfycbwIiA3LB_C1mITpOFMH7IhGglOr7I0oQF20i24BrSmCdOLYttbmDXbnwnl4kEXr6F3f2Q/exec';
 
 // ============================================
 // ENDPOINTS DE SUSCRIPCIÓN PUSH
