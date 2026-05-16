@@ -1,6 +1,5 @@
 // ============================================
 // admin.js — Panel de administración
-// Sin funciones duplicadas
 // ============================================
 
 let tiendasCache = [];
@@ -14,6 +13,33 @@ let audioContext = null;
 let audioActivado = false;
 let pedidosEntregadosCache = [];
 let pedidosSeleccionados = new Set();
+
+// ─── NUEVA FUNCIÓN: FETCH SEGURO CON JWT ───
+async function fetchConToken(url, opciones = {}) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        cerrarSesion(); // Si no hay token, lo sacamos
+        throw new Error('Sesión expirada');
+    }
+    
+    opciones.headers = opciones.headers || {};
+    if (opciones.headers instanceof Headers) {
+        opciones.headers.append('Authorization', `Bearer ${token}`);
+    } else {
+        opciones.headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, opciones);
+
+    // Si el servidor rechaza el token (401 No autorizado o 403 Prohibido)
+    if (response.status === 401 || response.status === 403) {
+        alert('Tu sesión ha expirado o no tienes permisos. Por favor, inicia sesión nuevamente.');
+        cerrarSesion();
+        throw new Error('No autorizado');
+    }
+
+    return response;
+}
 
 // ─── UTILIDADES ─────────────────────────────
 function escapeQuotes(str) {
@@ -178,7 +204,7 @@ async function activarPermisos() {
     if (banner) banner.style.display = 'none';
 
     if (permiso && typeof pushManager !== 'undefined') {
-        const vapidRes = await fetch(`${API_URL}/vapid-public-key`);
+        const vapidRes = await fetchConToken(`${API_URL}/api/vapid-public-key`); // ✅ Con token
         const { publicKey } = await vapidRes.json();
         await pushManager.init(publicKey);
     }
@@ -199,7 +225,7 @@ async function activarPermisos() {
 // ============================================
 async function cargarTiendasAdmin() {
     try {
-        const res = await fetch(`${API_URL}?action=getTiendas`);
+        const res = await fetchConToken(`${API_URL}?action=getTiendas`); // ✅ Con token
         const tiendas = await res.json();
         tiendasCache = tiendas;
         const tbody = document.querySelector("#tablaTiendas tbody");
@@ -268,7 +294,7 @@ async function guardarTienda() {
     try {
         const action = tiendaEditando ? "actualizarTienda" : "crearTienda";
         if (tiendaEditando) datos.id = tiendaEditando;
-        const response = await fetch(API_URL, {
+        const response = await fetchConToken(API_URL, { // ✅ Con token
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({ action, ...datos })
@@ -306,7 +332,7 @@ async function editarTienda(id) {
 async function eliminarTienda(id) {
     if (!confirm("¿Eliminar tienda? También se eliminarán sus productos.")) return;
     try {
-        const response = await fetch(`${API_URL}?action=eliminarTienda&id=${id}`);
+        const response = await fetchConToken(`${API_URL}?action=eliminarTienda&id=${id}`); // ✅ Con token
         const data = await response.json();
         if (data.success) {
             mostrarNotificacion("Tienda eliminada");
@@ -331,7 +357,7 @@ async function cargarProductosPorTienda(tiendaId) {
     document.getElementById("nombreTiendaSeleccionada").textContent = tienda ? tienda.nombre : '';
     document.getElementById("listaProductosTienda").style.display = "block";
     try {
-        const res = await fetch(`${API_URL}?action=getProductos&tiendaId=${tiendaId}`);
+        const res = await fetchConToken(`${API_URL}?action=getProductos&tiendaId=${tiendaId}`); // ✅ Con token
         const productos = await res.json();
         productosCache = productos;
         const tbody = document.querySelector("#tablaProductosTienda tbody");
@@ -406,7 +432,7 @@ async function guardarProducto() {
     try {
         const action = productoEditando ? "actualizarProducto" : "crearProducto";
         if (productoEditando) datos.id = productoEditando;
-        const response = await fetch(API_URL, {
+        const response = await fetchConToken(API_URL, { // ✅ Con token
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({ action, ...datos })
@@ -445,7 +471,7 @@ async function editarProducto(id) {
 async function eliminarProducto(id) {
     if (!confirm("¿Eliminar producto?")) return;
     try {
-        const response = await fetch(`${API_URL}?action=eliminarProducto&id=${id}`);
+        const response = await fetchConToken(`${API_URL}?action=eliminarProducto&id=${id}`); // ✅ Con token
         const data = await response.json();
         if (data.success) {
             mostrarNotificacion("Producto eliminado");
@@ -464,7 +490,7 @@ async function eliminarProducto(id) {
 // ============================================
 async function cargarDomiciliarios() {
     try {
-        const res = await fetch(`${API_URL}?action=getDomiciliarios`);
+        const res = await fetchConToken(`${API_URL}?action=getDomiciliarios`); // ✅ Con token
         const domiciliarios = await res.json();
         domiciliariosCache = domiciliarios;
     } catch (error) {
@@ -475,16 +501,14 @@ async function cargarDomiciliarios() {
 // ============================================
 // PEDIDOS ACTIVOS — CON COLUMNA TIENDA
 // ============================================
-// Reemplazar en admin.js
 async function cargarPedidosAdmin() {
     try {
-        const res = await fetch(`${API_URL}?action=getPedidos`);
+        const res = await fetchConToken(`${API_URL}?action=getPedidos`); // ✅ Con token
         const pedidos = await res.json();
         const tbody = document.querySelector("#tablaPedidos tbody");
         if (!tbody) return;
         const activos = pedidos.filter(p => p.estado !== 'entregado' && p.estado !== 'cancelado');
 
-        // Actualizar badge del menú
         const badge = document.getElementById('badge-pedidos-activos');
         if (badge) {
             badge.textContent = activos.length;
@@ -520,6 +544,7 @@ async function cargarPedidosAdmin() {
         mostrarNotificacion("Error cargando pedidos", "error");
     }
 }
+
 // ============================================
 // ASIGNACIÓN DOMICILIARIOS
 // ============================================
@@ -579,7 +604,7 @@ async function confirmarAsignacion(domiciliarioId, domiciliarioNombre) {
     if (!pedidoIdAsignar) return;
     if (!confirm(`¿Asignar pedido #${pedidoIdAsignar} a ${domiciliarioNombre}?`)) return;
     try {
-        const response = await fetch(`${API_URL}?action=asignarDomiciliario&pedidoId=${pedidoIdAsignar}&domiciliarioId=${domiciliarioId}`);
+        const response = await fetchConToken(`${API_URL}?action=asignarDomiciliario&pedidoId=${pedidoIdAsignar}&domiciliarioId=${domiciliarioId}`); // ✅ Con token
         const data = await response.json();
         if (data.success) {
             mostrarNotificacion(`✅ Pedido #${pedidoIdAsignar} asignado a ${domiciliarioNombre}`);
@@ -601,7 +626,7 @@ async function cambiarEstadoPedidoAdmin(pedidoId) {
         return;
     }
     try {
-        const response = await fetch(`${API_URL}?action=actualizarEstado&pedidoId=${pedidoId}&estado=${encodeURIComponent(nuevoEstado)}`);
+        const response = await fetchConToken(`${API_URL}?action=actualizarEstado&pedidoId=${pedidoId}&estado=${encodeURIComponent(nuevoEstado)}`); // ✅ Con token
         const data = await response.json();
         if (data.success) {
             mostrarNotificacion("Estado actualizado");
@@ -617,7 +642,7 @@ async function cambiarEstadoPedidoAdmin(pedidoId) {
 
 async function verDetallePedido(pedidoId) {
     try {
-        const res = await fetch(`${API_URL}?action=getPedidos`);
+        const res = await fetchConToken(`${API_URL}?action=getPedidos`); // ✅ Con token
         const pedidos = await res.json();
         const pedido = pedidos.find(p => p.id == pedidoId);
         if (!pedido) return;
@@ -685,7 +710,7 @@ function obtenerTextoTiendas(pedido) {
 
 async function cargarHistorialPedidos() {
     try {
-        const res = await fetch(`${API_URL}?action=getPedidos`);
+        const res = await fetchConToken(`${API_URL}?action=getPedidos`); // ✅ Con token
         const todos = await res.json();
         pedidosEntregadosCache = todos.filter(p => p.estado === 'entregado').sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
         llenarFiltroDomiciliarios();
@@ -849,7 +874,7 @@ async function eliminarPedidosSeleccionados() {
 
 async function ejecutarEliminacionPedidos(ids) {
     try {
-        const response = await fetch(`${API_URL}?action=eliminarPedidos`, {
+        const response = await fetchConToken(`${API_URL}?action=eliminarPedidos`, { // ✅ Con token
             method: 'POST',
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({ ids: JSON.stringify(ids) })
@@ -901,6 +926,7 @@ function exportarHistorialCSV() {
     link.click();
     mostrarNotificacion("Exportado a CSV", "success");
 }
+
 // ============================================
 // DOMICILIARIOS — CRUD
 // ============================================
@@ -908,11 +934,10 @@ let domiciliarioEditando = null;
 
 async function cargarDomiciliariosAdmin() {
     try {
-        const res = await fetch(`${API_URL}?action=getDomiciliarios`);
+        const res = await fetchConToken(`${API_URL}?action=getDomiciliarios`); // ✅ Con token
         const domiciliarios = await res.json();
         domiciliariosCache = domiciliarios;
 
-        // Actualizar badge del menú
         const badge = document.getElementById('badge-domiciliarios');
         if (badge) {
             badge.textContent = domiciliarios.length;
@@ -927,7 +952,6 @@ async function cargarDomiciliariosAdmin() {
             return;
         }
 
-        // Contar pedidos por domiciliario
         const conteoPedidos = {};
         if (window._infPedidos) {
             window._infPedidos.forEach(p => {
@@ -1027,7 +1051,7 @@ async function guardarDomiciliario() {
         const action = domiciliarioEditando ? 'actualizarDomiciliario' : 'crearDomiciliario';
         if (domiciliarioEditando) datos.id = domiciliarioEditando;
 
-        const response = await fetch(API_URL, {
+        const response = await fetchConToken(API_URL, { // ✅ Con token
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({ action, ...datos })
@@ -1057,7 +1081,7 @@ async function eliminarDomiciliario(id) {
     if (!confirm(`¿Eliminar a "${domi.nombre}"?\n\nEsta acción no se puede deshacer.`)) return;
 
     try {
-        const response = await fetch(`${API_URL}?action=eliminarDomiciliario&id=${id}`);
+        const response = await fetchConToken(`${API_URL}?action=eliminarDomiciliario&id=${id}`); // ✅ Con token
         const data = await response.json();
 
         if (data.success) {

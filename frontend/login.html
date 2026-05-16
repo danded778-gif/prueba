@@ -175,12 +175,12 @@
         <form id="formLogin">
             <div class="form-group">
                 <label><i class="fas fa-user"></i> Usuario</label>
-                <input type="text" id="usuario" placeholder="Ej: Juan Pérez" required>
+                <input type="text" id="usuario" placeholder="Ej: Juan Pérez" required autocomplete="username">
             </div>
             
             <div class="form-group">
                 <label><i class="fas fa-lock"></i> Contraseña</label>
-                <input type="password" id="password" placeholder="Tu contraseña" required>
+                <input type="password" id="password" placeholder="Tu contraseña" required autocomplete="current-password">
             </div>
             
             <button type="submit" id="btnLogin">
@@ -191,8 +191,18 @@
         <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Volver al inicio</a>
     </div>
 
+    <!-- Scripts necesarios -->
     <script src="assets/js/config.js"></script>
+    <script src="assets/js/auth.js"></script>
     <script>
+        // ─── REDIRECCIÓN AUTOMÁTICA ───
+        // Si el usuario ya está logueado, no debe ver el login, lo mandamos directo
+        const sesionActual = obtenerSesion();
+        if (sesionActual.rol) {
+            redirigirSegunRol();
+        }
+
+        // ─── LÓGICA DE LOGIN ───
         document.getElementById("formLogin").addEventListener("submit", async function(e) {
             e.preventDefault();
             
@@ -201,45 +211,56 @@
             const errorDiv = document.getElementById("error");
             const btn = document.getElementById("btnLogin");
             
+            // Limpiar y preparar UI
             errorDiv.style.display = "none";
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
-            
+
             try {
-                const url = `${API_URL}?action=login&nombre=${encodeURIComponent(usuario)}&password=${encodeURIComponent(password)}`;
-                
-                const response = await fetch(url);
+                // 1. Hacer petición al nuevo backend
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre: usuario, password: password })
+                });
+
                 const data = await response.json();
-                
-                if (data.success) {
-                    guardarSesion(data.rol, data.nombre, data.id);
+
+                // 2. Si el backend devuelve éxito y un token JWT
+                if (data.success && data.token) {
+                    // Guardar SOLO el token (auth-guard.js se encarga de leer los datos de aquí)
+                    localStorage.setItem('token', data.token);
                     
+                    // Redirigir según el rol devuelto por el backend
                     if (data.rol === "admin") {
                         window.location.href = "admin.html";
                     } else if (data.rol === "domiciliario") {
                         window.location.href = "domiciliario.html";
+                    } else {
+                        window.location.href = "index.html";
                     }
                 } else {
+                    // 3. Si las credenciales son incorrectas
                     errorDiv.textContent = data.error || "Credenciales incorrectas";
                     errorDiv.style.display = "block";
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Ingresar';
                 }
             } catch (err) {
-                errorDiv.textContent = "Error de conexión. Intenta de nuevo.";
+                // 4. Error de red o servidor caído
+                errorDiv.textContent = "Error de conexión con el servidor. Intenta de nuevo.";
                 errorDiv.style.display = "block";
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Ingresar';
             }
         });
-    </script>
-        <script>
+
+        // ─── PWA Service Worker ───
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('service-worker.js').catch(() => {});
             });
         }
     </script>
-
 </body>
 </html>

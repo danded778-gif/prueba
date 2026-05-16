@@ -1,6 +1,6 @@
 // ============================================
 // server.js — Backend completo de Domicilios
-// 4 funciones: Static + Proxy + Socket.IO + Push
+// 5 funciones: Static + Proxy + Socket.IO + Push + JWT Auth
 // ============================================
 
 const express = require('express');
@@ -11,6 +11,14 @@ const cors = require('cors');
 const axios = require('axios');
 const webpush = require('web-push');
 require('dotenv').config();
+
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    console.error('❌ Faltan JWT_SECRET en el archivo .env');
+    process.exit(1);
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -30,34 +38,98 @@ app.use(express.urlencoded({ extended: true }));
 
 // ============================================
 // VAPID — Claves para Web Push
-// Estas NO cambian entre local y producción
 // ============================================
-//const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
-//const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
-//const VAPID_EMAIL = process.env.VAPID_EMAIL;
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+const VAPID_EMAIL = process.env.VAPID_EMAIL;
 
-//if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-   // console.error('Faltan claves VAPID en el archivo .env');
- //   process.exit(1);}
+if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+    console.error('Faltan claves VAPID en el archivo .env');
+    process.exit(1);
+}
 
-//webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+
+// ============================================
+// AUTENTICACIÓN JWT - LOGIN
+// ============================================
+app.post('/api/login', async (req, res) => {
+    const { nombre, password } = req.body;
+
+    if (!nombre || !password) {
+        return res.status(400).json({ error: 'Nombre de usuario y contraseña son requeridos' });
+    }
+     
+    try {
+        // 1. Consultar a Google Apps Script
+        const url = `${GAS_URL}?action=login&nombre=${encodeURIComponent(nombre)}&password=${encodeURIComponent(password)}`;
+        const response = await axios.get(url);
+        const data = response.data;
+        
+        // 2. Si GAS valida correctamente, generamos el Token
+        if (data.success) {
+            const payload = {
+                id: data.id,
+                nombre: data.nombre,
+                rol: data.rol
+            };
+
+            const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' });
+
+            res.json({ 
+                success: true, 
+                token,
+                rol: data.rol,
+                nombre: data.nombre,
+                id: data.id
+            });
+        } else {
+            res.status(401).json({ success: false, error: data.error || "Credenciales incorrectas" });
+        }
+    } catch (err) {
+        console.error('Error en login:', err.message);
+        res.status(500).json({ success: false, error: "Error de conexión con el servidor." });
+    }
+});
+
+// ============================================
+// MIDDLEWARE: Verificar Token JWT (Híbrido)
+// Permite acceso sin token (clientes), pero 
+// bloquea si el token es inválido/expirado.
+// ============================================
+function verificarToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        req.user = null; // No hay token, usuario público
+        return next();
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded; // Token válido, guardamos datos del usuario
+        next();
+    } catch (error) {
+        // Si mandaron token pero está mal/expirado, devolvemos error 403
+        // El frontend usará esto para expulsar al usuario
+        return res.status(403).json({ success: false, error: 'Token inválido o expirado.' });
+    }
+}
 
 // ============================================
 // SUSCRIPCIONES PUSH
-// Mapa: endpoint → { subscription, usuarioId, rol }
 // ============================================
 const suscripciones = new Map();
 
 // ============================================
 // GOOGLE APPS SCRIPT — URL fija
 // ============================================
-//const GAS_URL = 'https://script.google.com/macros/s/AKfycbwIiA3LB_C1mITpOFMH7IhGglOr7I0oQF20i24BrSmCdOLYttbmDXbnwnl4kEXr6F3f2Q/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwIiA3LB_C1mITpOFMH7IhGglOr7I0oQF20i24BrSmCdOLYttbmDXbnwnl4kEXr6F3f2Q/exec';
 
 // ============================================
 // ENDPOINTS DE SUSCRIPCIÓN PUSH
 // ============================================
-
-// Registrar nueva suscripción
 app.post('/api/suscripciones', (req, res) => {
     const { subscription, usuarioId, rol } = req.body;
     if (!subscription || !subscription.endpoint) {
@@ -73,19 +145,16 @@ app.post('/api/suscripciones', (req, res) => {
     res.json({ success: true, total: suscripciones.size });
 });
 
-// Eliminar suscripción
 app.post('/api/suscripciones/eliminar', (req, res) => {
     const { endpoint } = req.body;
     if (endpoint) suscripciones.delete(endpoint);
     res.json({ success: true });
 });
 
-// Obtener clave pública VAPID
 app.get('/api/vapid-public-key', (req, res) => {
     res.json({ publicKey: VAPID_PUBLIC_KEY });
 });
 
-// Endpoint genérico para enviar push (usado por GAS si se necesita)
 app.post('/api/enviar-push', async (req, res) => {
     const { titulo, mensaje, url = '/', tipo = 'general', roles = ['admin'], pedidoId = null } = req.body;
     const payload = JSON.stringify({
@@ -116,7 +185,6 @@ app.post('/api/enviar-push', async (req, res) => {
 
 // ============================================
 // FUNCIÓN INTERNA: Enviar push a UN domiciliario
-// Busca por usuarioId Y rol='domiciliario'
 // ============================================
 async function enviarPushADomiciliario(domiciliarioId, pedidoId, pedidoDetalle) {
     const cuerpo = pedidoDetalle
@@ -138,10 +206,8 @@ async function enviarPushADomiciliario(domiciliarioId, pedidoId, pedidoDetalle) 
     });
 
     for (const [endpoint, subData] of suscripciones) {
-        // Filtrar: solo el domiciliario específico
         if (String(subData.usuarioId) !== String(domiciliarioId)) continue;
         if (subData.rol !== 'domiciliario') continue;
-
         try {
             await webpush.sendNotification(subData.subscription, payload);
             console.log(`📱 Push enviado → domiciliario ${domiciliarioId}`);
@@ -171,8 +237,6 @@ async function obtenerPedidoPorId(pedidoId) {
 
 // ============================================
 // SERVIR FRONTEND ESTÁTICO — Solo en desarrollo
-// ⚠️ DEBE IR ANTES que cualquier app.get('/')
-// En producción, el frontend se sirve desde GitHub Pages
 // ============================================
 if (isDev) {
     const frontendPath = path.join(__dirname, '../frontend');
@@ -180,31 +244,39 @@ if (isDev) {
     app.use(express.static(frontendPath));
 }
 
-// ============================================
-// ENDPOINT DE STATUS — Info del servidor
-// Cambiado de '/' a '/api/status' para que
-// express.static pueda servir index.html en '/'
-// ============================================
 app.get('/api/status', (req, res) => {
     res.json({ status: 'online', modo: isDev ? 'development' : 'production' });
 });
 
 // ============================================
 // PROXY PRINCIPAL — Todas las llamadas a /api
-//
-// FLUJO:
-//   1. Recibe request del frontend
-//   2. La reenvía a Google Apps Script
-//   3. Responde al cliente INMEDIATAMENTE
-//   4. DESPUÉS (sin bloquear): emite Socket + Push
 // ============================================
-app.all('/api', async (req, res) => {
+app.all('/api', verificarToken, async (req, res) => {
     try {
         const action = req.query.action || req.body.action;
-        console.log(`📥 [${req.method}] action=${action}`);
+        console.log(`📥 [${req.method}] action=${action} (User: ${req.user ? req.user.nombre : 'Público'})`);
 
         if (!action) {
             return res.status(400).json({ success: false, error: 'Falta action' });
+        }
+
+        // ============================================
+        // 🔒 PROTECCIÓN DE RUTAS POR ROL
+        // ============================================
+        const accionesAdmin = ['crearTienda', 'actualizarTienda', 'eliminarTienda', 'crearProducto', 'actualizarProducto', 'eliminarProducto', 'crearDomiciliario', 'actualizarDomiciliario', 'eliminarDomiciliario', 'eliminarPedidos', 'asignarDomiciliario'];
+        const accionesDomiciliario = ['actualizarEstado'];
+        const accionesAutenticadas = ['getDomiciliarios', 'getPedidos']; // Requieren login, pero cualquier rol
+
+        if (accionesAdmin.includes(action) && req.user?.rol !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Acceso denegado. Se requiere rol de administrador.' });
+        }
+
+        if (accionesDomiciliario.includes(action) && !['admin', 'domiciliario'].includes(req.user?.rol)) {
+            return res.status(403).json({ success: false, error: 'Acceso denegado. Se requiere rol de domiciliario o admin.' });
+        }
+
+        if (accionesAutenticadas.includes(action) && !req.user) {
+            return res.status(401).json({ success: false, error: 'Debes iniciar sesión para ver esta información.' });
         }
 
         // Construir URL para GAS
@@ -231,17 +303,10 @@ app.all('/api', async (req, res) => {
         res.json(data);
 
         // ===== SOCKET.IO + PUSH (después de responder) =====
-        // Este bloque está en try/catch separado para NUNCA
-        // causar ERR_HTTP_HEADERS_SENT
         if (!data.success) return;
 
         try {
             switch (action) {
-
-                // ─────────────────────────────────────
-                // ESCENARIO 1: Cliente crea pedido
-                // → Notificar a TODOS los admins
-                // ─────────────────────────────────────
                 case 'crearPedido': {
                     const pedido = await obtenerPedidoPorId(data.id);
                     io.emit('nuevoPedido', {
@@ -252,10 +317,6 @@ app.all('/api', async (req, res) => {
                     break;
                 }
 
-                // ─────────────────────────────────────
-                // ESCENARIO 3: Alguien cambia estado
-                // → Notificar a TODOS los conectados
-                // ─────────────────────────────────────
                 case 'actualizarEstado': {
                     const pedidoId = (req.body && req.body.pedidoId) || req.query.pedidoId;
                     const nuevoEstado = (req.body && req.body.estado) || req.query.estado;
@@ -264,12 +325,6 @@ app.all('/api', async (req, res) => {
                     break;
                 }
 
-                // ─────────────────────────────────────
-                // ESCENARIO 2: Admin asigna domiciliario
-                // → Socket directo a la room del domiciliario
-                // → Push directo al domiciliario
-                // → Broadcast general para admin
-                // ─────────────────────────────────────
                 case 'asignarDomiciliario': {
                     const pedidoId = (req.body && req.body.pedidoId) || req.query.pedidoId;
                     const domiciliarioId = (req.body && req.body.domiciliarioId) || req.query.domiciliarioId;
@@ -281,13 +336,11 @@ app.all('/api', async (req, res) => {
 
                     console.log(`🎯 ASIGNAR: pedido #${pedidoId} → domiciliario ${domiciliarioId}`);
 
-                    // Obtener datos del pedido para el mensaje
                     const pedidoDetalle = await obtenerPedidoPorId(pedidoId);
                     const mensaje = pedidoDetalle
                         ? `Pedido #${pedidoId} asignado - ${pedidoDetalle.clienteNombre || ''}`
                         : `Pedido #${pedidoId} asignado`;
 
-                    // 1. SOCKET directo a la room domiciliario_{id}
                     const roomName = `domiciliario_${domiciliarioId}`;
                     const roomSockets = io.sockets.adapter.rooms.get(roomName);
                     console.log(`🏠 Room ${roomName}: ${roomSockets ? roomSockets.size : 0} socket(s)`);
@@ -299,10 +352,8 @@ app.all('/api', async (req, res) => {
                     });
                     console.log(`✅ Socket emitido → ${roomName}`);
 
-                    // 2. PUSH directo al domiciliario (funciona aunque esté cerrada la pestaña)
                     await enviarPushADomiciliario(domiciliarioId, pedidoId, pedidoDetalle);
 
-                    // 3. BROADCAST general (para que el admin vea la actualización)
                     io.emit('pedidoAsignado', {
                         pedidoId: String(pedidoId),
                         domiciliarioId: String(domiciliarioId),
@@ -313,7 +364,6 @@ app.all('/api', async (req, res) => {
                 }
             }
         } catch (socketError) {
-            // Este error NO afecta al cliente (ya recibió su respuesta)
             console.error('❌ Error Socket/Push (no afecta al cliente):', socketError.message);
         }
 
@@ -327,9 +377,6 @@ app.all('/api', async (req, res) => {
 
 // ============================================
 // SOCKET.IO — Conexiones y Rooms
-//
-// Cada domiciliario se une a room "domiciliario_{id}"
-// Cada admin se une a room "admin_room"
 // ============================================
 io.on('connection', (socket) => {
     console.log(`🔗 Conectado: ${socket.id}`);
@@ -359,14 +406,13 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`  🚀 Servidor en puerto ${PORT}`);
     console.log(`  📍 Local:   http://localhost:${PORT}`);
     console.log(`  🔧 Modo:    ${isDev ? 'DESARROLLO (frontend incluido)' : 'PRODUCCIÓN (solo API)'}`);
+    console.log(`  🔐 Auth:    JWT Habilitado`);
     console.log(`  📡 Push:    ${suscripciones.size} suscripciones`);
     console.log('═══════════════════════════════════════════════');
     console.log('');
     if (isDev) {
         console.log('  ⏳ Abre otra terminal y ejecuta:');
         console.log('     ngrok http 80');
-        console.log('');
-        console.log('  📱 Luego abre la URL de ngrok en tu navegador');
         console.log('');
     }
 });
