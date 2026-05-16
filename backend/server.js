@@ -29,10 +29,18 @@ const server = http.createServer(app);
 const isDev = process.env.NODE_ENV !== 'production';
 
 const io = socketIo(server, {
-    cors: { origin: true, methods: ['GET', 'POST'] }
+    cors: { 
+        origin: true, 
+        methods: ['GET', 'POST'],
+        allowedHeaders: ['Authorization'] // <--- AÑADIDO
+    }
 });
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ 
+    origin: true, 
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'] // <--- AÑADIDO
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
