@@ -108,10 +108,14 @@ async function verMenuTienda(tiendaId) {
     if (!container) return;
 
     container.className = '';
-    container.innerHTML = '';
+    container.innerHTML = `
+        <div style="text-align:center; padding: 4rem 0; width:100%;">
+            <div class="spinner" style="margin: 0 auto 1rem;"></div>
+            <p style="color: var(--gray);">Cargando menú...</p>
+        </div>
+    `;
 
     try {
-        mostrarCargando(true);
         const res = await fetch(`${API_URL}?action=getProductos&tiendaId=${tiendaId}`);
         const productos = await res.json();
         const tienda = tiendas.find(t => t.id == tiendaId);
@@ -190,8 +194,6 @@ async function verMenuTienda(tiendaId) {
     } catch (error) {
         console.error("Error cargando menú:", error);
         mostrarNotificacion("Error al cargar el menú", "error");
-    } finally {
-        mostrarCargando(false);
     }
 }
 
@@ -322,22 +324,6 @@ function irACheckout() {
         return;
     }
     window.location.href = "checkout.html";
-}
-
-function mostrarCargando(mostrar) {
-    let loader = document.getElementById("page-loader");
-    if (!loader) {
-        loader = document.createElement("div");
-        loader.id = "page-loader";
-        loader.innerHTML = `
-            <div class="spinner-container">
-                <div class="spinner"></div>
-                <p>Cargando...</p>
-            </div>
-        `;
-        document.body.appendChild(loader);
-    }
-    loader.style.display = mostrar ? "flex" : "none";
 }
 
 function vaciarCarrito() {

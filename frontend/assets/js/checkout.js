@@ -38,7 +38,7 @@
             const subtotalItem = parseInt(item.subtotal) || (precioUnitario * cantidad);
             const cantidadTipo = item.cantidadTipo || 'UND';
             const tiendaNombre = item.tiendaNombre || '';
-            
+
             subtotal += subtotalItem;
 
             html += `
@@ -130,7 +130,7 @@
         const total = subtotal + envio;
 
         const pedidoId = Date.now().toString(36).toUpperCase() +
-                         Math.random().toString(36).substring(2, 5).toUpperCase();
+            Math.random().toString(36).substring(2, 5).toUpperCase();
 
         const mensaje = construirMensaje({
             pedidoId, nombre, telefono, direccion,
@@ -172,7 +172,7 @@
         const telefono = APP_CONFIG.telefonoWhatsApp.replace(/\D/g, ''); // Limpiar solo numeros
         const urlBase = 'https://wa.me/' + telefono;
         const urlTest = urlBase + '?text=' + encodeURIComponent(msg);
-        
+
         if (urlTest.length > 1900) {
             const carrito = obtenerCarrito();
             msg = `🛒 *NUEVO PEDIDO #${sessionStorage.getItem('ultimoPedido') ? JSON.parse(sessionStorage.getItem('ultimoPedido')).pedidoId : ''}*\n`;
@@ -188,24 +188,24 @@
         }
 
         const url = urlBase + '?text=' + encodeURIComponent(msg);
-        
+
         // Detectar iOS
         const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
         // Detectar modo PWA standalone
         const esStandalone = window.navigator.standalone === true ||
-                             window.matchMedia('(display-mode: standalone)').matches;
+            window.matchMedia('(display-mode: standalone)').matches;
 
         if (esIOS) {
             // ============================================================
             // ESTRATEGIA iOS: Crear enlace <a> real y hacer clic programatico
             // ============================================================
-            
+
             // Limpiar cualquier enlace anterior
             const oldLink = document.getElementById('wa-link-temp');
             if (oldLink) oldLink.remove();
-            
+
             // Crear enlace temporal
             const link = document.createElement('a');
             link.id = 'wa-link-temp';
@@ -213,12 +213,12 @@
             link.target = '_blank';  // CRITICO: _blank funciona mejor en iOS
             link.rel = 'noopener noreferrer';
             link.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;';
-            
+
             // Para iOS standalone, usar el esquema whatsapp:// como fallback
             if (esStandalone) {
                 // Intentar primero con esquema de app nativa
                 link.href = 'whatsapp://send?phone=' + telefono + '&text=' + encodeURIComponent(msg);
-                
+
                 // Si no abre en 1 segundo, fallback a wa.me
                 setTimeout(() => {
                     const fallbackLink = document.createElement('a');
@@ -231,9 +231,9 @@
                     setTimeout(() => fallbackLink.remove(), 1000);
                 }, 1000);
             }
-            
+
             document.body.appendChild(link);
-            
+
             // Simular evento de clic real (touch para iOS)
             const event = new MouseEvent('click', {
                 view: window,
@@ -241,18 +241,18 @@
                 cancelable: true
             });
             link.dispatchEvent(event);
-            
+
             // Tambien intentar con click() nativo
             link.click();
-            
+
             // Limpiar
             setTimeout(() => {
                 if (link.parentNode) link.remove();
             }, 2000);
-            
+
         } else {
-            // Android y PC: location.href funciona bien
-            window.location.href = url;
+            // Android y PC: nueva pestaña para no bloquear la redirección a confirmacion.html
+            window.open(url, '_blank');
         }
     }
 
@@ -329,15 +329,15 @@
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: params.toString()
         })
-        .then(res => res.json())
-        .then(resp => {
-            console.log('Pedido guardado:', resp);
-            limpiarCarrito();
-        })
-        .catch(err => {
-            console.warn('No se guardo en servidor, pedido llego por WhatsApp:', err.message);
-            limpiarCarrito();
-        });
+            .then(res => res.json())
+            .then(resp => {
+                console.log('Pedido guardado:', resp);
+                limpiarCarrito();
+            })
+            .catch(err => {
+                console.warn('No se guardo en servidor, pedido llego por WhatsApp:', err.message);
+                limpiarCarrito();
+            });
     }
 
 })();

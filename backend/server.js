@@ -29,15 +29,15 @@ const server = http.createServer(app);
 const isDev = process.env.NODE_ENV !== 'production';
 
 const io = socketIo(server, {
-    cors: { 
-        origin: true, 
+    cors: {
+        origin: true,
         methods: ['GET', 'POST'],
         allowedHeaders: ['Authorization'] // <--- AÑADIDO
     }
 });
 
-app.use(cors({ 
-    origin: true, 
+app.use(cors({
+    origin: true,
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'] // <--- AÑADIDO
 }));
@@ -67,13 +67,13 @@ app.post('/api/login', async (req, res) => {
     if (!nombre || !password) {
         return res.status(400).json({ error: 'Nombre de usuario y contraseña son requeridos' });
     }
-     
+
     try {
         // 1. Consultar a Google Apps Script
         const url = `${GAS_URL}?action=login&nombre=${encodeURIComponent(nombre)}&password=${encodeURIComponent(password)}`;
         const response = await axios.get(url);
         const data = response.data;
-        
+
         // 2. Si GAS valida correctamente, generamos el Token
         if (data.success) {
             const payload = {
@@ -84,8 +84,8 @@ app.post('/api/login', async (req, res) => {
 
             const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' });
 
-            res.json({ 
-                success: true, 
+            res.json({
+                success: true,
                 token,
                 rol: data.rol,
                 nombre: data.nombre,
@@ -305,7 +305,7 @@ app.all('/api', verificarToken, async (req, res) => {
         }
 
         const data = response.data;
-        console.log(`📤 GAS: success=${data.success}`);
+        console.log(`📤 GAS: success=${data.success ?? (Array.isArray(data) ? `array[${data.length}]` : '?')}`);
 
         // ===== RESPONDER AL CLIENTE INMEDIATAMENTE =====
         res.json(data);
@@ -330,6 +330,29 @@ app.all('/api', verificarToken, async (req, res) => {
                     const nuevoEstado = (req.body && req.body.estado) || req.query.estado;
                     io.emit('estadoActualizado', { pedidoId, nuevoEstado });
                     console.log(`🔄 Emitido estadoActualizado #${pedidoId} → ${nuevoEstado}`);
+                    if (nuevoEstado === 'entregado') {
+                        const payload = JSON.stringify({
+                            title: '✅ Pedido entregado',
+                            body: `Pedido #${pedidoId} fue entregado`,
+                            url: '/admin.html',
+                            icon: 'assets/img/icon-192x192.png',
+                            badge: 'assets/img/icon-192x192.png',
+                            tag: `entregado-${pedidoId}-${Date.now()}`,
+                            requireInteraction: false,
+                            data: { url: '/admin.html', pedidoId, tipo: 'entregado' }
+                        });
+
+                        for (const [endpoint, subData] of suscripciones) {
+                            if (subData.rol !== 'admin') continue;
+                            try {
+                                await webpush.sendNotification(subData.subscription, payload);
+                            } catch (error) {
+                                if (error.statusCode === 410 || error.statusCode === 404) {
+                                    suscripciones.delete(endpoint);
+                                }
+                            }
+                        }
+                    }
                     break;
                 }
 
@@ -402,6 +425,15 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log(`⚠️ Desconectado: ${socket.id}`);
     });
+});
+
+app.get('/api/suscripciones/estado', (req, res) => {
+    const lista = Array.from(suscripciones.values()).map(s => ({
+        usuarioId: s.usuarioId,
+        rol: s.rol,
+        fecha: s.fecha
+    }));
+    res.json({ total: suscripciones.size, suscripciones: lista });
 });
 
 // ============================================

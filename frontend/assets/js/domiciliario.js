@@ -6,7 +6,7 @@
 let pedidosActivosCache = [];
 let pedidosHistorialCache = [];
 let filtroHistorialActual = 'todos';
-const HISTORIAL_KEY = 'domiciliario_historial';
+let HISTORIAL_KEY = 'domiciliario_historial'; 
 let miDomiciliarioId = null;
 
 // ─── Helper: Extraer texto de tiendas de un pedido ───
@@ -56,6 +56,9 @@ async function cargarDomiciliarioData() {
 
     const el = document.getElementById('user-display');
     if (el && sesion.usuario) el.innerHTML = `<i class="fas fa-user-circle"></i> ${sesion.usuario}`;
+
+
+    HISTORIAL_KEY = `domiciliario_historial_${miDomiciliarioId}`;
 
     cargarHistorialLocal();
     await cargarPedidosDomiciliario(sesion.id);
@@ -129,7 +132,12 @@ async function cargarPedidosDomiciliario(domiciliarioId) {
         const res = await fetchConToken(`${API_URL}?action=getPedidos&domiciliario=${domiciliarioId}`);
         const pedidos = await res.json();
         pedidosActivosCache = pedidos.filter(p => p.estado !== 'entregado' && p.estado !== 'cancelado');
-        pedidos.filter(p => p.estado === 'entregado').forEach(p => agregarAHistorialLocal(p));
+                pedidos
+            .filter(p => 
+                p.estado === 'entregado' &&
+                String(p.domiciliarioId) === String(domiciliarioId)
+            )
+            .forEach(p => agregarAHistorialLocal(p));
         guardarHistorialLocal();
         renderizarPedidosActivos();
         renderizarHistorial();
@@ -153,7 +161,7 @@ function guardarHistorialLocal() {
 }
 function agregarAHistorialLocal(p) {
     if (!pedidosHistorialCache.some(h => h.id === p.id)) {
-        p.fechaEntregaLocal = new Date().toISOString();
+        p.fechaEntregaLocal = p.fecha;
         pedidosHistorialCache.unshift(p);
     }
 }
@@ -261,7 +269,7 @@ async function cambiarEstadoPedido(pedidoId, nuevoEstado) {
     try {
         btn = event.target.closest('button'); orig = btn.innerHTML;
         btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        const r = await fetch(`${API_URL}?action=actualizarEstado&pedidoId=${pedidoId}&estado=${encodeURIComponent(nuevoEstado)}`);
+        const r = await fetchConToken(`${API_URL}?action=actualizarEstado&pedidoId=${pedidoId}&estado=${encodeURIComponent(nuevoEstado)}`);
         const d = await r.json();
         if (d.success) { mostrarToast('Actualizado', `Pedido → ${nuevoEstado}`, 'success'); await cargarPedidosDomiciliario(miDomiciliarioId); }
         else { mostrarToast('Error', 'No se pudo actualizar', 'error'); btn.disabled = false; btn.innerHTML = orig; }
@@ -332,7 +340,7 @@ function formatearTiempo(fecha) {
 function verificarEstadoPermisos() {
     const b = document.getElementById('permisos-banner');
     if (!b) return;
-    const ok = ('Notification' in window) && Notification.permission === 'granted' && audioCtx?.state === 'running';
+    const ok = ('Notification' in window) && Notification.permission === 'granted';
     b.style.display = ok ? 'none' : 'flex';
 }
 

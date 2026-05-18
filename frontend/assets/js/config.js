@@ -67,6 +67,7 @@ function cerrarSesion() {
     localStorage.removeItem('usuario');
     localStorage.removeItem('id');
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     window.location.href = 'index.html';
 }
 

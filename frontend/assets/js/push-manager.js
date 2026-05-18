@@ -9,9 +9,9 @@ class PushNotificationManager {
         this.subscription = null;
         this.vapidPublicKey = null;
         var esLocal = window.location.hostname === 'localhost' ||
-                      window.location.hostname === '127.0.0.1' ||
-                      window.location.hostname.includes('.ngrok-free.dev') ||
-                      window.location.hostname.includes('.ngrok.io');
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname.includes('.ngrok-free.dev') ||
+            window.location.hostname.includes('.ngrok.io');
         this.apiUrl = esLocal
             ? window.location.origin
             : 'https://prueba-production-b9fb.up.railway.app';
@@ -26,9 +26,9 @@ class PushNotificationManager {
         }
 
         var esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         var esPWA = window.navigator.standalone === true ||
-                      window.matchMedia('(display-mode: standalone)').matches;
+            window.matchMedia('(display-mode: standalone)').matches;
 
         if (esIOS && !esPWA) {
             console.warn('iOS requiere PWA instalada');
@@ -81,6 +81,12 @@ class PushNotificationManager {
 
         try {
             var registration = await navigator.serviceWorker.ready;
+
+            var subExistente = await registration.pushManager.getSubscription();
+            if (subExistente) {
+                console.log('🔄 [Push] Eliminando suscripción anterior...');
+                await subExistente.unsubscribe();
+            }
             var key = this.urlBase64ToUint8Array(this.vapidPublicKey);
 
             this.subscription = await registration.pushManager.subscribe({
@@ -107,8 +113,21 @@ class PushNotificationManager {
     }
 
     async saveSubscriptionToServer(subscription) {
-        var userData = {};
-        try { userData = JSON.parse(localStorage.getItem('user') || '{}'); } catch (e) {}
+        var usuarioId = 'anon';
+        var rol = 'desconocido';
+
+        try {
+            const token = localStorage.getItem('token');
+            if (token) {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const payload = JSON.parse(atob(base64));
+                usuarioId = payload.id || 'anon';
+                rol = payload.rol || 'desconocido';
+            }
+        } catch (e) {
+            console.warn('No se pudo decodificar token:', e.message);
+        }
 
         try {
             var res = await fetch(this.apiUrl + '/api/suscripciones', {
@@ -116,8 +135,8 @@ class PushNotificationManager {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     subscription: subscription,
-                    usuarioId: userData.id || 'anon',
-                    rol: userData.rol || 'desconocido'
+                    usuarioId: usuarioId,
+                    rol: rol
                 })
             });
 
@@ -145,7 +164,7 @@ class PushNotificationManager {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ endpoint: this.subscription.endpoint })
             });
-        } catch (e) {}
+        } catch (e) { }
         this.subscription = null;
     }
 
@@ -179,7 +198,7 @@ async function verificarEstadoPermisos() {
         var banner = document.getElementById('permisos-banner');
         if (banner) banner.style.display = 'none';
         // ★ Aquí init() ahora suscribe automáticamente si no tiene suscripción
-        const vapidRes = await fetch(API_URL + '/api/vapid-public-key');
+        const vapidRes = await fetch(API_URL + '/vapid-public-key');
         const { publicKey } = await vapidRes.json();
         await pushManager.init(publicKey);
         return;
@@ -193,9 +212,9 @@ async function verificarEstadoPermisos() {
 
     // Estado 'default' — mostrar banner
     var esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     var esPWA = window.navigator.standalone === true ||
-                  window.matchMedia('(display-mode: standalone)').matches;
+        window.matchMedia('(display-mode: standalone)').matches;
 
     var banner = document.getElementById('permisos-banner');
     if (!banner) return;
@@ -229,7 +248,7 @@ async function activarPermisos() {
         }
 
         if (!pushManager.vapidPublicKey) {
-            const vapidRes = await fetch(API_URL + '/api/vapid-public-key');
+            const vapidRes = await fetch(API_URL + '/vapid-public-key');
             const { publicKey } = await vapidRes.json();
             pushManager.vapidPublicKey = publicKey;
         }
@@ -237,7 +256,7 @@ async function activarPermisos() {
 
         if (exito) {
             var banner = document.getElementById('permisos-banner');
-            if (banner) { banner.style.transition = 'all 0.3s ease'; banner.style.opacity = '0'; banner.style.transform = 'translateY(-20px)'; setTimeout(function() { banner.style.display = 'none'; }, 300); }
+            if (banner) { banner.style.transition = 'all 0.3s ease'; banner.style.opacity = '0'; banner.style.transform = 'translateY(-20px)'; setTimeout(function () { banner.style.display = 'none'; }, 300); }
             if (typeof sonidoExito === 'function') sonidoExito();
             if (typeof mostrarToast === 'function') mostrarToast('Notificaciones activadas', 'Recibirás alertas de nuevos pedidos', 'success', 4000);
         } else {

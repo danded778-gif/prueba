@@ -12,10 +12,10 @@ const PALETA = [
 ];
 
 const COLORES_METODO = {
-    'Efectivo':     { bg: '#28a745', clase: 'efectivo' },
-    'Nequi':        { bg: '#8338EC', clase: 'nequi' },
-    'Daviplata':    { bg: '#E63946', clase: 'daviplata' },
-    'Transferencia':{ bg: '#457B9D', clase: 'transferencia' }
+    'Efectivo': { bg: '#28a745', clase: 'efectivo' },
+    'Nequi': { bg: '#8338EC', clase: 'nequi' },
+    'Daviplata': { bg: '#E63946', clase: 'daviplata' },
+    'Transferencia': { bg: '#457B9D', clase: 'transferencia' }
 };
 
 // ─── ENTRADA PRINCIPAL ─────────────────────
@@ -30,11 +30,11 @@ async function cargarInformes() {
     try {
         // Obtener pedidos entregados y tiendas
         const [resPedidos, resTiendas] = await Promise.all([
-            fetch(`${API_URL}?action=getPedidos`),
-            fetch(`${API_URL}?action=getTiendas`)
+            fetchConToken(`${API_URL}?action=getPedidos`),
+            fetchConToken(`${API_URL}?action=getTiendas`)
         ]);
         const todosPedidos = await resPedidos.json();
-        const tiendas = await resTiendas.res ? resTiendas.res : await resTiendas.json();
+        const tiendas = await resTiendas.json();
 
         // Guardar para filtros
         window._infPedidos = todosPedidos.filter(p => p.estado === 'entregado');
@@ -136,7 +136,7 @@ function aplicarFiltrosInforme() {
     if (tiendaId) {
         filtrados = filtrados.filter(p => {
             let productos = [];
-            try { productos = JSON.parse(p.productosJson || '[]'); } catch (e) {}
+            try { productos = JSON.parse(p.productosJson || '[]'); } catch (e) { }
             return productos.some(pr => String(pr.tiendaId) === tiendaId);
         });
     }
@@ -158,7 +158,7 @@ function calcularDatos(pedidos) {
 
     pedidos.forEach(pedido => {
         let productos = [];
-        try { productos = JSON.parse(pedido.productosJson || '[]'); } catch (e) {}
+        try { productos = JSON.parse(pedido.productosJson || '[]'); } catch (e) { }
 
         // Calcular subtotal productos y envío
         const subtotalProductos = productos.reduce((s, pr) => s + (parseFloat(pr.subtotal) || 0), 0);

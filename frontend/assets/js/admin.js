@@ -190,7 +190,9 @@ document.addEventListener('click', function handler() {
 async function activarPermisos() {
     initAudio();
     if (audioContext?.state === 'suspended') {
-        try { await audioContext.resume(); } catch (e) { }
+        try { await audioContext.resume(); } catch (e) {
+            console.warn('No se pudo activar audio:', e);
+        }
     }
 
     let permiso = false;
@@ -853,9 +855,12 @@ function actualizarCheckboxMaestro() {
 }
 
 function actualizarBotonesAccionMasiva() {
+    const contenedor = document.getElementById('accionesMasivas');
     const btnEliminar = document.getElementById('btnEliminarSeleccionados');
     const contador = document.getElementById('contadorSeleccionados');
     const cantidad = pedidosSeleccionados.size;
+
+    if (contenedor) contenedor.style.display = cantidad > 0 ? 'flex' : 'none';
     if (btnEliminar) btnEliminar.style.display = cantidad > 0 ? 'inline-flex' : 'none';
     if (contador) contador.textContent = cantidad > 0 ? `${cantidad} seleccionado${cantidad !== 1 ? 's' : ''}` : '';
 }
@@ -934,8 +939,13 @@ let domiciliarioEditando = null;
 
 async function cargarDomiciliariosAdmin() {
     try {
-        const res = await fetchConToken(`${API_URL}?action=getDomiciliarios`); // ✅ Con token
-        const domiciliarios = await res.json();
+        const [resDomis, resPedidos] = await Promise.all([
+            fetchConToken(`${API_URL}?action=getDomiciliarios`),
+            fetchConToken(`${API_URL}?action=getPedidos`)
+        ]);
+
+        const domiciliarios = await resDomis.json();
+        const todosPedidos = await resPedidos.json();
         domiciliariosCache = domiciliarios;
 
         const badge = document.getElementById('badge-domiciliarios');
@@ -952,14 +962,13 @@ async function cargarDomiciliariosAdmin() {
             return;
         }
 
+        // Contar pedidos por domiciliario desde datos reales
         const conteoPedidos = {};
-        if (window._infPedidos) {
-            window._infPedidos.forEach(p => {
-                if (p.domiciliarioId) {
-                    conteoPedidos[p.domiciliarioId] = (conteoPedidos[p.domiciliarioId] || 0) + 1;
-                }
-            });
-        }
+        todosPedidos.forEach(p => {
+            if (p.domiciliarioId) {
+                conteoPedidos[p.domiciliarioId] = (conteoPedidos[p.domiciliarioId] || 0) + 1;
+            }
+        });
 
         tbody.innerHTML = domiciliarios.map(d => `
             <tr>
@@ -985,6 +994,7 @@ async function cargarDomiciliariosAdmin() {
         mostrarNotificacion('Error cargando domiciliarios', 'error');
     }
 }
+
 
 function mostrarModalDomiciliario() {
     domiciliarioEditando = null;

@@ -3,7 +3,10 @@
 // Estrategia: Cache First + Network Fallback
 // ============================================
 
-const CACHE_NAME = 'soluvencon-v1.5';
+const isDev = false;
+const CACHE_NAME = isDev
+    ? 'dev-' + Date.now() 
+    : 'soluvencon-v1.5.6'; 
 
 // Archivos que se cachean al instalar
 const ARCHIVOS_ESTATICOS = [
@@ -224,8 +227,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || 'SOLUVENCON', {
       body: data.body || 'Nueva notificación',
-      icon: data.icon || '/Domidelis/assets/img/icon-192x192.png',
-      badge: data.badge || '/Domidelis/assets/img/icon-192x192.png',
+      icon: data.icon || '/domidelis/assets/img/icon-192x192.png',
+      badge: data.badge || '/domidelis/assets/img/icon-192x192.png',
       tag: data.tag || 'soluvencon-push',
       requireInteraction: true,
       vibrate: [200, 100, 200, 100, 200],
