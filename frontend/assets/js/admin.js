@@ -121,8 +121,8 @@ async function notificarPushAdmin(titulo, opciones = {}) {
         const reg = await navigator.serviceWorker.ready;
         await reg.showNotification(titulo, {
             body: opciones.body || '',
-            icon: opciones.icon || '/assets/img/icon-192x192.png',
-            badge: opciones.badge || '/assets/img/icon-192x192.png',
+            icon: opciones.icon || '/domidelis/assets/img/icon-192x192.png',
+            badge: opciones.badge || '/domidelis/assets/img/icon-192x192.png',
             tag: opciones.tag || 'admin-pedido',
             requireInteraction: true,
             vibrate: [200, 100, 200],

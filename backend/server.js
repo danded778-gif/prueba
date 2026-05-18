@@ -335,8 +335,8 @@ app.all('/api', verificarToken, async (req, res) => {
                             title: '✅ Pedido entregado',
                             body: `Pedido #${pedidoId} fue entregado`,
                             url: '/admin.html',
-                            icon: 'assets/img/icon-192x192.png',
-                            badge: 'assets/img/icon-192x192.png',
+                            icon: '/domidelis/assets/img/icon-192x192.png',
+                            badge: '/domidelis/assets/img/icon-192x192.png',
                             tag: `entregado-${pedidoId}-${Date.now()}`,
                             requireInteraction: false,
                             data: { url: '/admin.html', pedidoId, tipo: 'entregado' }
